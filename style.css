@@ -1,0 +1,186 @@
+/* Reset and Basic Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body,
+html {
+  width: 100%;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* Layout Styles */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+header {
+  background-color: #1e1e1e;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+  flex: 0 0 60px;
+  position: relative;
+  z-index: 3; /* Above NetworkCanvas and content container */
+}
+.main {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+.sidebar {
+  background-color: #2c2c2c;
+  color: #fff;
+  width: 200px;
+  padding: 20px;
+  flex: 0 0 200px;
+  position: relative;
+  z-index: 3; /* Above NetworkCanvas and content container */
+}
+.sidebar h2 {
+  margin-bottom: 15px;
+}
+.sidebar ul {
+  list-style: none;
+}
+.sidebar ul li {
+  margin-bottom: 10px;
+}
+.sidebar ul li a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.sidebar ul li a:hover {
+  color: #00ff00;
+}
+.content {
+  position: relative;
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+  z-index: 2; /* Below header and sidebar, above NetworkCanvas */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* NetworkCanvas Styles */
+#networkCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000; /* Black background */
+  z-index: 1; /* Behind the content container */
+  pointer-events: none; /* Allow interactions with content */
+}
+.node {
+  position: absolute;
+  width: 10px; /* Increased size for better visibility */
+  height: 10px;
+  background-color: #00ff00;
+  border-radius: 50%;
+  /* cursor: pointer; */ /* Removed cursor as interactions are disabled */
+  /* Blinking handled via .blink class */
+}
+.node.blink {
+  animation: blink 1.5s infinite;
+}
+.node.active {
+  /* Active state when sending lines */
+  background-color: #ff0000; /* Change color when active */
+  animation: none; /* Pause blinking */
+}
+.line {
+  position: absolute;
+  height: 2px;
+  transform-origin: 0 50%;
+}
+.line.dotted {
+  border-top: 2px dotted #00ff00; /* Dotted line */
+}
+.line.solid {
+  background-color: #00ff00; /* Solid line */
+}
+.line.fade {
+  animation: fadeOut 1s forwards;
+}
+
+/* Pulse Effect */
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+.pulse {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #00ff00;
+  border-radius: 50%;
+  animation: pulse 1s forwards;
+  pointer-events: none;
+}
+
+/* Blinking Animation */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Fade Out Animation for Lines */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Content Container Styles */
+.content-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  background-color: rgba(255, 255, 255, 0.9); /* Slight transparency */
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 3; /* Above NetworkCanvas */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 150px;
+    flex: 0 0 150px;
+  }
+}
+@media (max-width: 480px) {
+  .sidebar {
+    display: none;
+  }
+  .main {
+    flex-direction: column;
+  }
+  .content-container {
+    max-width: 100%;
+  }
+}
