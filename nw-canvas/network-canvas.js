@@ -2,6 +2,9 @@
 
 import { Point } from "./point.js";
 
+// todo: getPositionOf, animate Node, extend CanvasNodes
+// make a version that uses canvas instead of divs
+
 // Enums
 const NodeStatus = Object.freeze({
   IDLE: "idle",
@@ -9,7 +12,7 @@ const NodeStatus = Object.freeze({
   SENDING: "sending",
 });
 
-const LineType = Object.freeze({
+const LineStyle = Object.freeze({
   DOTTED: "dotted",
   SOLID: "solid",
 });
@@ -145,7 +148,7 @@ class CanvasNodes {
   findById(id) {
     return this.findBy((node) => node.id === id);
   }
-  
+
   findByStatus(status) {
     return this.nodes.filter((node) => node.status === status);
   }
@@ -158,7 +161,7 @@ class CanvasNodes {
     return randomized.slice(0, count);
   }
 
-  animateAll() {
+  blinkAll() {
     this.nodes.forEach((node) => node.blink());
   }
 
@@ -178,7 +181,7 @@ class CanvasLine {
   constructor(start, end, onComplete, isPathLine = false) {
     this.$element = $('<div class="line"></div>');
     this.dimensions = getLineDimensions(start, end);
-    this.type = probability(0.5) ? LineType.DOTTED : LineType.SOLID;
+    this.type = probability(0.5) ? LineStyle.DOTTED : LineStyle.SOLID;
     this.onComplete = onComplete;
     this.isPathLine = isPathLine;
   }
