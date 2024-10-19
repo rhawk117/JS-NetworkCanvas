@@ -1,9 +1,20 @@
 // network-canvas.js
 
-// god help me what have I created
 import { Point } from "./point.js";
-export { NetworkCanvas };
 
+// Enums
+const NodeStatus = {
+  IDLE: "idle",
+  ACTIVE: "active",
+  SENDING: "sending",
+};
+
+const LineType = {
+  DOTTED: "dotted",
+  SOLID: "solid",
+};
+
+// Helper functions
 const getLineDimensions = (start, end) => {
   const dX = end.x - start.x;
   const dY = end.y - start.y;
@@ -29,16 +40,11 @@ const findCanvas = () => {
 };
 
 const getRandomNodePositions = (nodes) => {
-  if (nodes.length < 2) {
-    return null;
-  }
-  const randomNode = () => {
-    const randIndex = Math.floor(Math.random() * nodes.length);
-    return nodes[randIndex].position;
-  };
+  if (nodes.length < 2) return null;
+  const randomNode = () =>
+    nodes[Math.floor(Math.random() * nodes.length)].position;
   const start = randomNode();
   let end = randomNode();
-
   while (start.x === end.x && start.y === end.y) {
     end = randomNode();
   }
@@ -49,8 +55,7 @@ class Node {
   constructor(size, justification, id) {
     this.id = id;
     this.position = new Point(size.width, size.height, justification);
-    this.isActive = false;
-    this.isSending = false;
+    this.status = NodeStatus.IDLE;
     this.$element = this.create();
   }
 
@@ -63,25 +68,21 @@ class Node {
       .attr("data-id", this.id);
   }
 
-  blink() {
-    this.$element.addClass("active");
-    setTimeout(() => this.$element.removeClass("active"), 300);
+  setStatus(status) {
+    this.status = status;
+    this.$element
+      .removeClass(Object.values(NodeStatus).join(" "))
+      .addClass(status);
   }
 
-  /**
-   * @param {number} times - Number of times to pulse.
-   * @param {number} interval - Interval between pulses in milliseconds.
-   * @returns {Promise} - Resolves when all pulses are complete.
-   */
   pulse(times = 1, interval = 300) {
     return new Promise((resolve) => {
       let count = 0;
-
       const doPulse = () => {
         if (count < times) {
-          this.$element.addClass("active");
+          this.setStatus(NodeStatus.ACTIVE);
           setTimeout(() => {
-            this.$element.removeClass("active");
+            this.setStatus(NodeStatus.IDLE);
             count++;
             setTimeout(doPulse, interval);
           }, interval);
@@ -89,22 +90,8 @@ class Node {
           resolve();
         }
       };
-
       doPulse();
     });
-  }
-
-  pulseThreeTimes() {
-    return this.pulse(3, 300);
-  }
-
-  pulseTwoTimes() {
-    return this.pulse(2, 300);
-  }
-
-  setSending(state) {
-    this.isSending = state;
-    this.$element.toggleClass("blink", !state);
   }
 
   updatePosition(newPosition) {
@@ -114,18 +101,20 @@ class Node {
       top: `${this.position.y}px`,
     });
   }
+
+  addRipple() {
+    const $ripple = $('<div class="ripple-effect"></div>');
+    this.$element.append($ripple);
+    setTimeout(() => $ripple.remove(), 1000);
+  }
 }
 
-/**
- * @class CanvasLine
- */
 class CanvasLine {
-  constructor(start, end, onComplete, isOverclock = false, isPathLine = false) {
+  constructor(start, end, onComplete, isPathLine = false) {
     this.$element = $('<div class="line"></div>');
     this.dimensions = getLineDimensions(start, end);
-    this.isDotted = Math.random() < 0.5;
+    this.type = Math.random() < 0.5 ? LineType.DOTTED : LineType.SOLID;
     this.onComplete = onComplete;
-    this.isOverclock = isOverclock;
     this.isPathLine = isPathLine;
   }
 
@@ -142,10 +131,10 @@ class CanvasLine {
         width: "0px",
         transform: `rotate(${this.dimensions.angle}deg)`,
       })
-      .addClass(this.isDotted ? "dotted" : "solid");
+      .addClass(this.type);
 
     if (this.isPathLine) {
-      this.$element.addClass("path-line"); // For CSS styling of path lines
+      this.$element.addClass("path-line");
     }
   }
 
@@ -163,7 +152,6 @@ class CanvasLine {
               if (typeof this.onComplete === "function") this.onComplete();
             }, 100);
           } else {
-            // For path lines, resolve immediately without fading
             if (typeof this.onComplete === "function") this.onComplete();
           }
         },
@@ -180,10 +168,7 @@ class Graph {
   }
 
   buildGraph() {
-    this.nodes.forEach((node) => {
-      this.adjacencyList.set(node.id, []);
-    });
-
+    this.nodes.forEach((node) => this.adjacencyList.set(node.id, []));
     for (let i = 0; i < this.nodes.length; i++) {
       for (let j = i + 1; j < this.nodes.length; j++) {
         const nodeA = this.nodes[i];
@@ -229,16 +214,12 @@ class Graph {
         }
       });
 
-      if (current === endId || smallest === Infinity) {
-        break;
-      }
+      if (current === endId || smallest === Infinity) break;
 
       queue.delete(current);
 
       this.adjacencyList.get(current).forEach((neighbor) => {
-        if (!queue.has(neighbor.node)) {
-          return;
-        }
+        if (!queue.has(neighbor.node)) return;
         const alt = distances.get(current) + neighbor.weight;
         if (alt < distances.get(neighbor.node)) {
           distances.set(neighbor.node, alt);
@@ -246,6 +227,7 @@ class Graph {
         }
       });
     }
+
     const path = [];
     let current = endId;
     while (current !== null) {
@@ -253,27 +235,80 @@ class Graph {
       current = previous.get(current);
     }
 
-    if (distances.get(endId) === Infinity) {
-      return [];
-    } else {
-      return path;
-    }
+    return distances.get(endId) === Infinity ? [] : path;
   }
 }
 
-const config = {
-  nodeCount: 50,
-  frequency: 1000,
-  justifyNodes: "corner", // "center", "corner", "random"
-};
+class NetworkAnimator {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.animationQueue = [];
+    this.isAnimating = false;
+  }
 
-const overclockConfig = {
-  active: false,
-  interval: 10000,
-  duration: 5000,
-  chance: 0.25,
-  fraction: 0.75,
-};
+  enqueueAnimation(startNode, endNode) {
+    this.animationQueue.push({ start: startNode, end: endNode });
+    this.processQueue();
+  }
+
+  processQueue() {
+    if (this.isAnimating || this.animationQueue.length === 0) return;
+    const { start, end } = this.animationQueue.shift();
+    this.isAnimating = true;
+    this.animatePath(start, end, () => {
+      this.isAnimating = false;
+      this.processQueue();
+    });
+  }
+
+  async animatePath(startNode, endNode, callback) {
+    const path = this.canvas.graph.runDijkstras(startNode.id, endNode.id);
+    if (path.length === 0) {
+      if (callback) callback();
+      return;
+    }
+
+    const nodeMap = new Map(this.canvas.nodes.map((n) => [n.id, n]));
+    const originNode = nodeMap.get(path[0]);
+    const destinationNode = nodeMap.get(path[path.length - 1]);
+
+    if (!originNode || !destinationNode) {
+      if (callback) callback();
+      return;
+    }
+
+    try {
+      await originNode.pulse(3);
+      await destinationNode.pulse(3);
+
+      path.forEach((nodeId) => {
+        const node = nodeMap.get(nodeId);
+        if (node) node.$element.addClass("path-node");
+      });
+
+      for (let i = 0; i < path.length - 1; i++) {
+        const currentNode = nodeMap.get(path[i]);
+        const nextNode = nodeMap.get(path[i + 1]);
+        if (currentNode && nextNode) {
+          await this.canvas.animateLine(currentNode, nextNode, true);
+        }
+      }
+
+      await destinationNode.pulse(2);
+
+      setTimeout(() => {
+        path.forEach((nodeId) => {
+          const node = nodeMap.get(nodeId);
+          if (node) node.$element.removeClass("path-node");
+        });
+        if (callback) callback();
+      }, 500);
+    } catch (error) {
+      console.error("Error during path animation:", error);
+      if (callback) callback();
+    }
+  }
+}
 
 class NetworkCanvas {
   constructor($canvas) {
@@ -281,8 +316,19 @@ class NetworkCanvas {
     this.size = getCanvasSize($canvas);
     this.nodes = [];
     this.graph = null;
-    this.pathAnimationQueue = [];
-    this.isAnimatingPath = false;
+    this.animator = new NetworkAnimator(this);
+    this.config = {
+      nodeCount: 250,
+      frequency: 500,
+      justifyNodes: "random",
+    };
+    this.overclockConfig = {
+      active: false,
+      interval: 5000,
+      duration: 5000,
+      chance: 0.25,
+      fraction: 0.75,
+    };
   }
 
   init() {
@@ -290,13 +336,13 @@ class NetworkCanvas {
     this.buildGraph();
     this.startAnimations();
     this.setupOverclock();
-    this.setupDrawPathAnimation();
+    this.setupPathAnimation();
     $(window).on("resize", () => this.resize());
   }
 
   createNodes() {
-    for (let i = 0; i < config.nodeCount; i++) {
-      const node = new Node(this.size, config.justifyNodes, i);
+    for (let i = 0; i < this.config.nodeCount; i++) {
+      const node = new Node(this.size, this.config.justifyNodes, i);
       this.$canvas.append(node.$element);
       this.nodes.push(node);
     }
@@ -304,17 +350,10 @@ class NetworkCanvas {
 
   buildGraph() {
     this.graph = new Graph(this.nodes);
-    console.log("Graph built with adjacency list:", this.graph.adjacencyList);
   }
 
-  createLine(start, end, onComplete, isOverclock = false, isPathLine = false) {
-    const line = new CanvasLine(
-      start,
-      end,
-      onComplete,
-      isOverclock,
-      isPathLine
-    );
+  createLine(start, end, onComplete, isPathLine = false) {
+    const line = new CanvasLine(start, end, onComplete, isPathLine);
     this.$canvas.append(line.$element);
     line.init();
   }
@@ -337,36 +376,36 @@ class NetworkCanvas {
               n.position.x === positions.start.x &&
               n.position.y === positions.start.y
           );
-          if (startNode) startNode.blink();
+          if (startNode) startNode.addRipple();
         }
         this.createLine(positions.start, positions.end, null);
       }
-      setTimeout(animate, config.frequency + Math.random() * 200);
+      setTimeout(animate, this.config.frequency + Math.random() * 200);
     };
     animate();
   }
 
   setupOverclock() {
     setInterval(() => {
-      const isBiased = Math.random() < overclockConfig.chance;
-      if (isBiased && !overclockConfig.active) {
-        overclockConfig.active = true;
+      const isBiased = Math.random() < this.overclockConfig.chance;
+      if (isBiased && !this.overclockConfig.active) {
+        this.overclockConfig.active = true;
         this.overclock();
         setTimeout(() => {
-          overclockConfig.active = false;
-        }, overclockConfig.duration);
+          this.overclockConfig.active = false;
+        }, this.overclockConfig.duration);
       }
-    }, overclockConfig.interval);
+    }, this.overclockConfig.interval);
   }
 
   overclock() {
     const nodesToConnect = Math.floor(
-      this.nodes.length * overclockConfig.fraction
+      this.nodes.length * this.overclockConfig.fraction
     );
     for (let i = 0; i < nodesToConnect; i++) {
       const [node, targetNode] = this.getRandomNodes(2);
       if (node && targetNode) {
-        this.createLine(node.position, targetNode.position, null, true); // Overclock lines fade out as regular lines
+        this.createLine(node.position, targetNode.position, null, false);
       }
     }
   }
@@ -384,127 +423,30 @@ class NetworkCanvas {
       const newPosition = new Point(
         this.size.width,
         this.size.height,
-        config.justifyNodes
+        this.config.justifyNodes
       );
       node.updatePosition(newPosition);
     });
     this.buildGraph();
   }
 
-  setupDrawPathAnimation() {
+  setupPathAnimation() {
     setInterval(() => {
       const [startNode, endNode] = this.getRandomNodes(2);
       if (startNode && endNode) {
-        this.enqueuePathAnimation(startNode, endNode);
+        this.animator.enqueueAnimation(startNode, endNode);
       }
     }, 15000);
   }
 
-  enqueuePathAnimation(startNode, endNode) {
-    this.pathAnimationQueue.push({ start: startNode, end: endNode });
-    this.processPathQueue();
-  }
-
-  processPathQueue() {
-    if (this.isAnimatingPath || this.pathAnimationQueue.length === 0) {
-      return;
-    }
-
-    const { start, end } = this.pathAnimationQueue.shift();
-    this.isAnimatingPath = true;
-    this.drawPath(start, end, () => {
-      this.isAnimatingPath = false;
-      this.processPathQueue();
-    });
-  }
-
-  /**
-   * @param {Node} startNode - the origin node.
-   * @param {Node} endNode - the destination node.
-   * @param {Function} callback - once animation is complete.
-   */
-  async drawPath(startNode, endNode, callback) {
-    const path = this.graph.runDijkstras(startNode.id, endNode.id);
-
-    if (path.length === 0) {
-      if (callback) {
-        callback();
-      }
-      return;
-    }
-
-    const originNode = this.nodes.find((n) => n.id === path[0]);
-    const destinationNode = this.nodes.find(
-      (n) => n.id === path[path.length - 1]
-    );
-
-    if (!originNode || !destinationNode) {
-      if (callback) {
-        callback();
-      }
-      return;
-    }
-
-    try {
-      await originNode.pulseThreeTimes();
-
-      await destinationNode.pulseThreeTimes();
-
-      path.forEach((nodeId) => {
-        const node = this.nodes.find((n) => n.id === nodeId);
-        if (node) node.$element.addClass("path-node");
-      });
-
-      for (let i = 0; i < path.length - 1; i++) {
-        const currentNode = this.nodes.find((n) => n.id === path[i]);
-        const nextNode = this.nodes.find((n) => n.id === path[i + 1]);
-
-        if (currentNode && nextNode) {
-          await this.animateLine(currentNode, nextNode, true);
-        }
-      }
-
-      await destinationNode.pulseTwoTimes();
-
-      setTimeout(() => {
-        path.forEach((nodeId) => {
-          const node = this.nodes.find((n) => n.id === nodeId);
-          if (node) {
-            node.$element.removeClass("path-node");
-          }
-        });
-        if (callback) {
-          callback();
-        }
-      }, 500);
-    } catch (error) {
-      console.error("Error during path animation:", error);
-      if (callback) {
-        callback();
-      }
-    }
-  }
-
-  /**
-   * Animates a line between two nodes and returns a Promise that resolves when animation is complete.
-   * @param {Node} currentNode - The starting node.
-   * @param {Node} nextNode - The ending node.
-   * @param {boolean} isPathLine - Indicates if the line is part of Dijkstra's path.
-   * @returns {Promise} - Resolves when the line animation is complete.
-   */
   animateLine(currentNode, nextNode, isPathLine = false) {
     return new Promise((resolve) => {
-      const line = new CanvasLine(
+      this.createLine(
         currentNode.position,
         nextNode.position,
-        () => {
-          resolve();
-        },
-        false,
+        resolve,
         isPathLine
-      ); // isOverclock=false
-      this.$canvas.append(line.$element);
-      line.init();
+      );
     });
   }
 
@@ -516,3 +458,5 @@ class NetworkCanvas {
     return findCanvas();
   }
 }
+
+export { NetworkCanvas };

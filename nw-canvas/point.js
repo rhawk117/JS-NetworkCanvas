@@ -1,7 +1,7 @@
 // point.js
+export 
 
-
-export class Point {
+class Point {
   constructor(width, height, justification) {
     this.setPoint(width, height, justification);
   }
@@ -26,6 +26,9 @@ export class Point {
   static create(justification, dimensions) {
     const { width, height } = dimensions;
     return new Point(width, height, justification);
+  }
+  equals(point) {
+    return this.x === point.x && this.y === point.y;
   }
 }
 
