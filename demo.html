@@ -6,8 +6,7 @@
     <title>Network Canvas Demo</title>
     <meta
       name="description"
-      content="A demo showcasing an interactive network canvas with enhanced animations."
-    />
+      content="A demo showcasing an interactive network canvas with enhanced animations." />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- jQuery CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -36,12 +35,10 @@
           <!-- Content overlaying the animation -->
           <div class="content-container">
             <h2>Welcome to the Network Canvas Demo</h2>
+            <p>This is a demo website showcasing the NetworkCanvas animation</p>
             <p>
-              This is a demo website showcasing the NetworkCanvas animation 
-            </p>
-            <p>
-              Observe the automatic connections, selective node blinking, 
-              and dijkstras
+              Observe the automatic connections, selective node blinking, and
+              dijkstras
             </p>
             <!-- Add more content as needed -->
           </div>
@@ -51,12 +48,12 @@
 
     <!-- Script Module -->
     <script type="module">
-      import { NetworkCanvas } from './nw-canvas/network-canvas.js';
+      import { NetworkCanvas } from "./nw-canvas/network-canvas.js";
 
       $(document).ready(function () {
-        const $canvas = $('#networkCanvas');
+        const $canvas = NetworkCanvas.find();
         const networkCanvas = new NetworkCanvas($canvas);
-        networkCanvas.init();
+        networkCanvas.draw();
       });
     </script>
   </body>

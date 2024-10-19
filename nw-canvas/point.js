@@ -50,5 +50,3 @@ const justifyPosition = (pos, justify) => {
       return justifyCorner(pos);
   }
 }; 
-
-
