@@ -1,7 +1,11 @@
 // point.js
-export 
 
-class Point {
+/**
+ * @class - a point in a 2D space
+ * @property {number} x - the x coordinate
+ * @property {number} y - the y coordinate
+ */
+export class Point {
   constructor(width, height, justification) {
     this.setPoint(width, height, justification);
   }
@@ -18,10 +22,10 @@ class Point {
     this.y = setAxis(height);
   }
   /**
-   * 
+   * factory method to create a point
    * @param {String} justification - 'random', 'center', 'corner'
-   * @param {Object} dimensions - { width: Number, height: Number }
-   * @returns 
+   * @param {Object{ width: Number, height: Number }} dimensions
+   * @returns {Point}
    */
   static create(justification, dimensions) {
     const { width, height } = dimensions;
@@ -49,4 +53,4 @@ const justifyPosition = (pos, justify) => {
     default: // 'corner' or default
       return justifyCorner(pos);
   }
-}; 
+};
