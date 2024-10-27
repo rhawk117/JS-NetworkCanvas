@@ -84,6 +84,7 @@ const getLineDimensions = (start, end) => {
  * @param {JQuery<HTMLElement>} $canvas - the jQuery canvas element.
  * @returns {{ width: number, height: number }}
  */
+
 const getCanvasSize = ($canvas) => ({
   width: $canvas.width(),
   height: $canvas.height(),
@@ -94,6 +95,7 @@ const getCanvasSize = ($canvas) => ({
  * @throws will throw an error if the canvas is not found.
  * @returns {JQuery<HTMLElement>} the jQuery canvas element.
  */
+
 const findCanvas = () => {
   const $canvas = $("#networkCanvas");
   if (!$canvas.length) {
@@ -114,7 +116,7 @@ const probability = (chance) => {
 /**
  * represents a single node in the network / graph.
  * @class
- * @property {number} id 
+ * @property {number} id
  * @property {Point} position - the x, y of the node on the canvas.
  * @property {NodeStatus} status - current status of the node.
  * @property {JQuery<HTMLElement>} $element - the jQuery element representing the node in the dom.
@@ -233,8 +235,8 @@ class CanvasNodes {
 
   /**
    * creates and appends all nodes to the container.
-   * @param {{ width: number, height: number }} size 
-   * @param {String} justification 
+   * @param {{ width: number, height: number }} size
+   * @param {String} justification
    * @param {Number} count - number of nodes to create.
    * @param {JQuery<HTMLElement>} $container - the container to append nodes to.
    */
@@ -316,11 +318,6 @@ class CanvasNodes {
       node.resize(pos);
     });
   }
-
-  /**
-   * retrieves all nodes.
-   * @returns {Node[]} - array of all nodes.
-   */
   getAll() {
     return this.nodes;
   }
@@ -383,7 +380,7 @@ class CanvasLine {
   animate() {
     /**
      * executes a callback if it is a valid function.
-     * @param {Function} callback 
+     * @param {Function} callback
      */
     const callIfValid = (callback) => {
       if (typeof callback === "function") {
@@ -416,7 +413,7 @@ class CanvasLine {
  * represents the graph structure of nodes and their connections.
  * @class
  * @property {Node[]} nodes - array of node instances.
- * @property {Map<number, { node: number, weight: number }[]>} adjacencyList  
+ * @property {Map<number, { node: number, weight: number }[]>} adjacencyList
  */
 class Graph {
   /**
@@ -465,7 +462,7 @@ class Graph {
    * @param {number} endId - the id of the end node.
    * @returns {number[]} array of node ids representing the shortest path.
    */
-  shortestPath(startId, endId) {
+  dijkstras(startId, endId) {
     const distances = new Map();
     const previous = new Map();
     const queue = new Set();
@@ -509,6 +506,7 @@ class Graph {
 
     const path = [];
     let current = endId;
+
     while (current !== null) {
       path.unshift(current);
       current = previous.get(current);
@@ -573,7 +571,7 @@ class PathAnimator {
    * @returns {number[]} array of node ids representing the shortest path.
    */
   getPath(startNode, endNode) {
-    return this.canvas.graph.shortestPath(startNode.id, endNode.id);
+    return this.canvas.graph.dijkstras(startNode.id, endNode.id);
   }
 
   /**
@@ -735,27 +733,31 @@ class NetworkCanvas {
      */
     const animate = () => {
       const [startNode, endNode] = this.canvasNodes.selectRandom(2);
+
       if (startNode && endNode) {
         animationChances(startNode, endNode);
       }
       setTimeout(animate, config.frequency + Math.random() * 200);
     };
+
     animate();
   }
 
   /**
-   * sets up the overclock mechanism to temporarily increase network activity.
+   * sets up the overclock mechanism draw connections
+   * between all nodes.
    */
   setupOverclock() {
     setInterval(() => {
       const isBiased = probability(overclockConfig.chance);
-      if (isBiased && !overclockConfig.active) {
-        overclockConfig.active = true;
-        this.overclock();
-        setTimeout(() => {
-          overclockConfig.active = false;
-        }, overclockConfig.duration);
+      if (!isBiased || overclockConfig.active) {
+        return;
       }
+      overclockConfig.active = true;
+      this.overclock();
+      setTimeout(() => {
+        overclockConfig.active = false;
+      }, overclockConfig.duration);
     }, overclockConfig.interval);
   }
 
