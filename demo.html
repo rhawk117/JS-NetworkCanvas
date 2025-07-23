@@ -1,56 +1,53 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Network Canvas Demo</title>
-    <meta
-      name="description"
-      content="A demo showcasing an interactive network canvas with enhanced animations." />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1>Network Canvas Demo</h1>
-      </header>
-      <div class="main">
-        <aside class="sidebar">
-          <h2>Sidebar</h2>
-          <ul>
-            <li><a href="#">Home</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Services</a></li>
-            <li><a href="#">Contact</a></li>
-          </ul>
-        </aside>
-        <section class="content">
-          <!-- NetworkCanvas will be inserted here -->
-          <div id="networkCanvas"></div>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<title>Network Canvas Demo</title>
+		<meta
+			name="description"
+			content="A demo showcasing an interactive network canvas with enhanced animations." />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<div class="container">
+			<header>
+				<h1>Network Canvas Demo</h1>
+			</header>
+			<div class="main">
+				<aside class="sidebar">
+					<h2>Sidebar</h2>
+					<ul>
+						<li><a href="#">Home</a></li>
+						<li><a href="#">About</a></li>
+						<li><a href="#">Services</a></li>
+						<li><a href="#">Contact</a></li>
+					</ul>
+				</aside>
+				<section class="content">
+					<div id="networkCanvas"></div>
 
-          <!-- Content overlaying the animation -->
-          <div class="content-container">
-            <h2>Welcome to the Network Canvas Demo</h2>
-            <p>This is a demo website showcasing the NetworkCanvas animation</p>
-            <p>
-              Observe the automatic connections, selective node blinking, and
-              dijkstras
-            </p>
-            <!-- Add more content as needed -->
-          </div>
-        </section>
-      </div>
-    </div>
-    <script type="module">
-      import { NetworkCanvas } from "./nw-canvas/network-canvas.js";
+					<div class="content-container">
+						<h2>Welcome to the Network Canvas Demo</h2>
+						<p>This is a demo website showcasing the NetworkCanvas animation</p>
+						<p>
+							Observe the automatic connections, selective node blinking, and
+							dijkstras
+						</p>
+					</div>
+				</section>
+			</div>
+		</div>
+		<script type="module">
+			import { NetworkCanvas } from "./nw-canvas/network-canvas.js";
 
-      $(document).ready(function () {
-        const $canvas = NetworkCanvas.find();
-        const networkCanvas = new NetworkCanvas($canvas);
-        networkCanvas.draw();
-      });
-    </script>
-  </body>
+			$(document).ready(function () {
+				const $canvas = NetworkCanvas.find();
+				const networkCanvas = new NetworkCanvas($canvas);
+				networkCanvas.draw();
+			});
+		</script>
+	</body>
 </html>
