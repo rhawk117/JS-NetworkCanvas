@@ -36,8 +36,8 @@ const LineStyle = Object.freeze({
  * @type {Config}
  */
 const config = {
-  nodeCount: 400,
-  frequency: 300,
+  nodeCount: 200,
+  frequency: 500,
   justifyNodes: "random",
 };
 
@@ -58,7 +58,7 @@ const overclockConfig = {
   active: false,
   interval: 5000,
   duration: 5000,
-  chance: 0.30,
+  chance: 0.20,
   fraction: 0.75,
 };
 
